@@ -1,23 +1,22 @@
-# AI Engineer Roadmap — Kit do Projeto (André Rizzato)
+# AI Engineer Roadmap (André Rizzato)
 
-Kit para trabalhar o curso de AI Engineering com o **Claude Code** dentro do
-VS Code, com contexto do projeto já configurado.
+Repositório do curso de AI Engineering, com o **Claude Code** configurado
+como professor + pair programmer (contexto em `CLAUDE.md`).
+
+Os exercícios usam como contexto real o
+[DistributedOrderSystem](https://github.com/andre-rizzato/DistributedOrderSystem),
+projeto próprio anterior ao curso — mas esse projeto vive em um repositório
+**separado e independente**, não dentro deste.
 
 ## Como instalar
 
-1. Extraia esta pasta e mescle o conteúdo com o seu clone do
-   `DistributedOrderSystem`:
-   - `ai/` → mescle com a pasta `ai/` que você já tem (ou copie se ainda
-     não existir).
-   - `CLAUDE.md` e `.claude/` → coloque na **raiz** do repositório.
-   - `ebook/` → pode ficar na raiz ou dentro de `ai/`, como preferir.
-2. Renomeie `ai/.env.example` para `ai/.env` e cole sua
-   `ANTHROPIC_API_KEY` (console.anthropic.com → API Keys → Create Key).
-   Esse arquivo já está no `.gitignore`.
-3. Abra a pasta no VS Code.
-4. Instale o Claude Code (extensão do VS Code ou `npm install -g
+1. Clone este repositório e abra a pasta no VS Code.
+2. Crie `ai/.env` com sua `ANTHROPIC_API_KEY`
+   (console.anthropic.com → API Keys → Create Key). Esse arquivo já está
+   no `.gitignore`.
+3. Instale o Claude Code (extensão do VS Code ou `npm install -g
    @anthropic-ai/claude-code` para usar via terminal).
-5. Rode `claude` na raiz do projeto. O `CLAUDE.md` carrega automaticamente
+4. Rode `claude` na raiz do projeto. O `CLAUDE.md` carrega automaticamente
    — rode `/context` para confirmar que ele aparece em **Memory files**.
 
 ## Comandos do curso
@@ -42,10 +41,10 @@ parei?" — `/gerar-ebook` só roda quando você pedir explicitamente.
 │       ├── status-curso/SKILL.md
 │       └── gerar-ebook/SKILL.md
 ├── ai/
-│   ├── .env.example                # renomeie para .env e cole sua chave
+│   ├── .env                        # ANTHROPIC_API_KEY (git-ignorado)
 │   ├── .gitignore
-│   └── week1/
-│       └── first_call.py           # exercício da Semana 1
+│   ├── week1/                      # exercícios da Semana 1
+│   └── week2/                      # exercícios da Semana 2
 └── ebook/
     ├── ebook_ai_engineer.py        # script reportlab do ebook
     └── AI_Engineer_Ebook_Semana1.pdf
