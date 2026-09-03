@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Arquivo atual (ai-engineer-course)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "internalConsole",
+      "python": "E:/conda/envs/ai-engineer-course/python.exe",
+      "cwd": "${fileDirname}",
+      "envFile": "${workspaceFolder}/ai/.env",
+      "env": { "PYTHONNOUSERSITE": "1" },
+      "justMyCode": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Settimana 5 — Ollama locale via docker-compose
+#
+# Non tocca DistributedOrderSystem (repo separato) — questo e' solo il
+# runtime del LLM locale, usato dalla camada di IA (Python) in ai/.
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-ai-engineer
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

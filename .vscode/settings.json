@@ -1,4 +1,15 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/ai/.venv/Scripts/python.exe",
-  "python.terminal.activateEnvironment": true
+  "python.defaultInterpreterPath": "E:/conda/envs/ai-engineer-course/python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python-envs.defaultEnvManager": "ms-python.python:conda",
+  "python-envs.defaultPackageManager": "ms-python.python:conda",
+  "[python]": {
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnEnter": "on"
+  }
 }

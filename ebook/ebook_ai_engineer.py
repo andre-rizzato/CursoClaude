@@ -2,7 +2,7 @@
 """
 Ebook: AI Engineer Roadmap - André Rizzato
 Gerado com reportlab. Preserva capítulos anteriores a cada nova geração.
-Versão: v1.1 - Caps 00 a 05
+Versão: v1.4 - Caps 00 a 09 + índice automático (multiBuild)
 """
 
 from reportlab.lib.pagesizes import A4
@@ -14,6 +14,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle,
     Preformatted, HRFlowable, Flowable
 )
+from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.graphics.shapes import Drawing, Rect, String, Line
 from reportlab.pdfgen import canvas as pdfcanvas
 
@@ -27,6 +28,10 @@ LIGHT_BLUE = colors.HexColor("#EAF1FB")
 GRAY = colors.HexColor("#5A5A5A")
 CODE_BG = colors.HexColor("#F4F4F4")
 ORANGE = colors.HexColor("#E07A2C")
+GREEN = colors.HexColor("#2E8B57")
+GREEN_BG = colors.HexColor("#E7F4EC")
+ORANGE_BG = colors.HexColor("#FCEFE2")
+GRAY_BG = colors.HexColor("#EDEDED")
 
 styles = getSampleStyleSheet()
 
@@ -81,6 +86,28 @@ CODE_STYLE = ParagraphStyle(
     backColor=CODE_BG, textColor=colors.HexColor("#111111"),
     borderPadding=8, leftIndent=4
 )
+
+TOC_STYLE_L0 = ParagraphStyle(
+    name="TOCLevel0", fontName="Helvetica-Bold", fontSize=11.5,
+    textColor=NAVY, leading=18, leftIndent=0, spaceBefore=4
+)
+
+
+# ---------- Documento com índice automático ----------
+class EbookDocTemplate(SimpleDocTemplate):
+    """SimpleDocTemplate com hook para popular o índice (TableOfContents).
+
+    afterFlowable é chamado pelo reportlab depois de desenhar cada
+    flowable na página - aqui capturamos todo parágrafo no estilo
+    ChapterTitle e notificamos o TOC com (nível, texto, página atual).
+    Requer doc.multiBuild() em vez de doc.build() - o número de página
+    só fica correto na segunda passada, depois que o índice já existe.
+    """
+
+    def afterFlowable(self, flowable):
+        if isinstance(flowable, Paragraph) and flowable.style.name == "ChapterTitle":
+            texto = flowable.getPlainText()
+            self.notify("TOCEntry", (0, texto, self.page))
 
 
 # ---------- Capa ----------
@@ -183,7 +210,7 @@ def multi_agent_diagram():
 
 # ---------- Construção do documento ----------
 def build():
-    doc = SimpleDocTemplate(
+    doc = EbookDocTemplate(
         OUTPUT_PATH, pagesize=A4,
         leftMargin=2.2 * cm, rightMargin=2.2 * cm,
         topMargin=1.8 * cm, bottomMargin=1.8 * cm,
@@ -194,6 +221,17 @@ def build():
     story = []
 
     build_cover(story, page_w, page_h)
+
+    # ===================== ÍNDICE =====================
+    # Estilo próprio (não "ChapterTitle") para não se auto-listar no índice -
+    # afterFlowable() do EbookDocTemplate casa pelo nome do estilo.
+    indice_heading_style = ParagraphStyle(name="IndiceHeading", parent=styles["ChapterTitle"])
+    story.append(Paragraph("ÍNDICE", indice_heading_style))
+    story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
+    toc = TableOfContents()
+    toc.levelStyles = [TOC_STYLE_L0]
+    story.append(toc)
+    story.append(PageBreak())
 
     # ===================== CAP 00 =====================
     story.append(Paragraph("CAPÍTULO 00", styles["ChapterKicker"]))
@@ -401,6 +439,12 @@ def build():
         ("LLM (Large Language Model)", "Modelo estatístico treinado para prever o próximo token de um texto, usado para gerar respostas, código e raciocínio."),
         ("Token", "Unidade mínima de texto processada pelo modelo; aproximadamente 3-4 caracteres em português."),
         ("Embedding", "Representação numérica (vetor) do significado de um texto, usada para medir similaridade semântica."),
+        ("Similaridade de cosseno", "Medida do ângulo entre dois vetores (ignora magnitude); padrão para comparar embeddings de texto."),
+        ("Chunking", "Divisão de um texto longo em pedaços menores (chunks) antes de gerar embeddings, para permitir retrieval granular."),
+        ("Overlap (chunking)", "Trecho de texto repetido entre chunks consecutivos, para não perder contexto na fronteira do corte."),
+        ("Retrieval", "Etapa do RAG que busca, por similaridade vetorial, os chunks mais relevantes para uma pergunta."),
+        ("Augmentation", "Etapa do RAG que injeta os chunks recuperados como contexto explícito dentro do prompt enviado ao LLM."),
+        ("Grounding", "Instruir o LLM a responder apenas com base no contexto fornecido, reduzindo o risco de alucinação."),
         ("RAG (Retrieval-Augmented Generation)", "Técnica que busca informação relevante em uma base de conhecimento antes de gerar a resposta do modelo."),
         ("Agente", "Sistema que usa um LLM para decidir ações, chamar ferramentas e iterar até cumprir um objetivo."),
         ("Tool Use / Function Calling", "Capacidade do modelo de chamar funções externas (ex: consultar um pedido no .NET) durante a conversa."),
@@ -491,8 +535,323 @@ def build():
         "ponta). Generalizar para o template core/ + packs/ só ao instanciar o segundo "
         "domínio, na Fase 5.</i>", styles["BodyPT"]
     ))
+    story.append(PageBreak())
 
-    doc.build(story)
+    # ===================== CAP 06 =====================
+    story.append(Paragraph("CAPÍTULO 06", styles["ChapterKicker"]))
+    story.append(Paragraph("Embeddings e Similaridade Semântica", styles["ChapterTitle"]))
+    story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
+
+    story.append(Paragraph(
+        "Um <b>embedding</b> é um vetor numérico que representa o significado de um texto. "
+        "Textos com significados próximos geram vetores próximos no espaço vetorial. A "
+        "Anthropic não tem modelo nativo de embeddings - o curso usa a <b>Voyage AI</b> "
+        "(<b>voyage-4-large</b> para indexação em nuvem, <b>voyage-4-nano</b> open-weight "
+        "para rodar local).", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Similaridade de cosseno - a fórmula", styles["SectionHeading"]))
+    story.append(Paragraph(
+        "Dado dois vetores A e B, a similaridade de cosseno é:", styles["BodyPT"]
+    ))
+    story.append(Preformatted(
+        "cos(A, B) = (A . B) / (|A| . |B|)\n\n"
+        "  A . B  = produto escalar = soma de (a_i * b_i) termo a termo\n"
+        "  |A|    = norma de A = raiz quadrada da soma de a_i ao quadrado\n"
+        "  |B|    = norma de B = raiz quadrada da soma de b_i ao quadrado",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "O numerador mede o quanto os vetores apontam na mesma direção; o denominador "
+        "normaliza pelo tamanho de cada vetor, deixando o resultado só sobre a direção "
+        "(o resultado fica sempre entre -1 e 1).", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Cosseno vs. distância euclidiana - exemplo numérico", styles["SectionHeading"]))
+    story.append(Paragraph(
+        "Vetor A = (1, 1) e vetor B = (2, 2). B é literalmente A esticado - mesma direção, "
+        "magnitude diferente.", styles["BodyPT"]
+    ))
+    story.append(Preformatted(
+        "Distancia euclidiana:\n"
+        "  raiz((2-1)^2 + (2-1)^2) = raiz(2) = 1.41   -> parece \"diferente\"\n\n"
+        "Similaridade de cosseno:\n"
+        "  (1*2 + 1*2) / (raiz(2) * raiz(8)) = 4 / 4 = 1.0   -> direcao identica",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "Em embeddings de texto, a magnitude do vetor costuma refletir coisas como tamanho "
+        "do texto, não o significado. Cosseno ignora isso e compara só a direção - por isso "
+        "é o padrão em NLP, e não a distância euclidiana.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Aprofundamento: quatro perguntas em aberto (em linguagem simples)", styles["SectionHeading"]))
+
+    story.append(Paragraph("1. Por que cosseno, e não distância euclidiana?", styles["GlossaryTerm"]))
+    story.append(Paragraph(
+        "Porque distância euclidiana também é afetada pelo <b>tamanho</b> do vetor, não só "
+        "pela direção - e o tamanho do embedding costuma refletir coisas como tamanho do "
+        "texto, não o significado. Dois textos com o mesmo sentido mas tamanhos diferentes "
+        "podem parecer \"distantes\" na euclidiana e \"idênticos\" no cosseno (veja o exemplo "
+        "numérico acima: A e B apontam pro mesmo lugar, cosseno = 1.0, mas a distância "
+        "euclidiana entre eles não é zero). Cosseno olha só pra direção, por isso é o padrão "
+        "em NLP.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("2. Negação e o estado Cancelled", styles["GlossaryTerm"]))
+    story.append(Paragraph(
+        "Embeddings não entendem negação como lógica - entendem como padrão de palavras que "
+        "aparecem juntas. \"Pedido foi cancelado\" e \"pedido não foi cancelado\" usam quase "
+        "as mesmas palavras, no mesmo contexto, e por isso ficam próximos no espaço vetorial "
+        "mesmo significando o oposto. Como <b>Cancelled</b> é estado terminal da máquina de "
+        "estados do pedido (Pending -&gt; Confirmed -&gt; Shipped -&gt; Delivered / Cancelled), "
+        "um fato categórico e exato como esse deve vir de filtro estruturado no banco de "
+        "dados, não de busca semântica - busca semântica responde \"sobre o que é o texto\", "
+        "não \"isso é verdadeiro ou falso\".", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("3. Cosseno negativo (cos = -1)", styles["GlossaryTerm"]))
+    story.append(Paragraph(
+        "cos = 1 significa mesma direção (significado quase idêntico); cos = 0 significa "
+        "direções perpendiculares (sem relação); cos = -1 significaria direções opostas "
+        "(significado oposto). Na prática, com embeddings de texto, valores próximos de -1 "
+        "quase não aparecem: textos com significados opostos costumam cair perto de 0 (sem "
+        "relação), não perto de -1. Esses modelos são treinados para agrupar textos "
+        "parecidos, não para codificar \"oposto lógico\" - o espaço vetorial não tem um "
+        "conceito forte de antônimo.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("4. Códigos de erro internos (ex.: ORD_TIMEOUT_502)", styles["GlossaryTerm"]))
+    story.append(Paragraph(
+        "O modelo de embedding não sabe que isso é um identificador interno do sistema - ele "
+        "quebra o código em pedaços (ORD, TIMEOUT, 502) e gera um vetor a partir de "
+        "associações genéricas aprendidas no treino (\"502\" puxa semântica de erro HTTP, "
+        "\"TIMEOUT\" puxa semântica genérica de tempo esgotado), sem saber o que o código "
+        "significa especificamente no domínio. Por isso não se indexa o código cru - indexa-se "
+        "a descrição em linguagem natural (ex.: \"ORD_TIMEOUT_502: tempo excedido aguardando "
+        "confirmação do provedor de pagamento\").", styles["BodyPT"]
+    ))
+    story.append(PageBreak())
+
+    # ===================== CAP 07 =====================
+    story.append(Paragraph("CAPÍTULO 07", styles["ChapterKicker"]))
+    story.append(Paragraph("RAG do Zero - Chunking e Retrieval", styles["ChapterTitle"]))
+    story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
+
+    story.append(Paragraph(
+        "Antes de usar um framework (LangChain, LlamaIndex), o curso constrói um RAG mínimo "
+        "à mão, para entender o mecanismo por baixo do capô: dividir texto em pedaços "
+        "(<b>chunking</b>), transformar cada pedaço em embedding, e recuperar os mais "
+        "relevantes para uma pergunta (<b>retrieval</b>).", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Chunking de tamanho fixo com overlap", styles["SectionHeading"]))
+    story.append(Paragraph(
+        "A janela desliza sobre o texto em passos menores que o próprio tamanho do chunk, "
+        "criando sobreposição entre chunks vizinhos:", styles["BodyPT"]
+    ))
+    story.append(Preformatted(
+        "passo = tamanho_chunk - overlap\n\n"
+        "Exemplo: tamanho_chunk=60, overlap=15  ->  passo = 45",
+        CODE_STYLE
+    ))
+    story.append(Preformatted(
+        "posicao:  0        45       90       135     151\n"
+        "texto:    |--------|--------|--------|--------|\n"
+        "chunk 0:  [0.....................60)\n"
+        "chunk 1:      [45.....................105)\n"
+        "chunk 2:            [90.....................150)\n"
+        "chunk 3:                        [135......151)",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "O overlap evita que uma informação seja perdida bem na fronteira do corte - mas não "
+        "impede o corte de cair no meio de uma palavra, como aconteceu aqui (\"Motivo\" virou "
+        "\"...o:\" no início do chunk 1).", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Exercício: rag_chunking_retrieval.py", styles["SectionHeading"]))
+    story.append(Preformatted(
+        "def chunk_text(texto, tamanho_chunk=60, overlap=15):\n"
+        "    chunks = []\n"
+        "    passo = tamanho_chunk - overlap\n"
+        "    inicio = 0\n"
+        "    while inicio < len(texto):\n"
+        "        chunks.append(texto[inicio:inicio + tamanho_chunk])\n"
+        "        inicio += passo\n"
+        "    return chunks",
+        CODE_STYLE
+    ))
+    story.append(Paragraph("Código - week3/rag_chunking_retrieval.py (trecho)", styles["CodeCaption"]))
+
+    story.append(Paragraph(
+        "Ao embeddar a pergunta, o input_type usado é \"query\" (não \"document\") - a Voyage "
+        "gera embeddings ligeiramente diferentes para query vs. documento, uma assimetria "
+        "intencional do modelo, não um bug.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Resultado real (nota de suporte do pedido 4521)", styles["SectionHeading"]))
+    story.append(Preformatted(
+        "Pergunta: \"o cliente pediu reembolso?\"\n\n"
+        "[0.5493] 'o: item chegou danificado. Cliente pediu dinheiro de volta v'\n"
+        "[0.4521] 'eiro de volta via PIX. Reembolso processado em 3 dias uteis.'",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "O chunk vencedor não contém a palavra \"reembolso\" - contém \"Cliente pediu dinheiro "
+        "de volta\", com a mesma estrutura sujeito+verbo+objeto da pergunta. O chunk com a "
+        "palavra literal \"Reembolso\" fica em segundo porque fala do <b>status</b> do "
+        "reembolso (prazo de processamento), não de quem pediu o quê - <b>relevância "
+        "tópica</b> (mesma área do assunto) é diferente de <b>relevância proposicional</b> "
+        "(responder à mesma pergunta), e é a segunda que o embedding está de fato capturando.",
+        styles["BodyPT"]
+    ))
+    story.append(PageBreak())
+
+    # ===================== CAP 08 =====================
+    story.append(Paragraph("CAPÍTULO 08", styles["ChapterKicker"]))
+    story.append(Paragraph("RAG do Zero - Augmentation e Generation", styles["ChapterTitle"]))
+    story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
+
+    story.append(Paragraph(
+        "Chunking e retrieval (Capítulo 07) respondem \"quais pedaços de texto são "
+        "relevantes\". Faltam os dois últimos passos do RAG: transformar esses chunks em "
+        "resposta em linguagem natural.", styles["BodyPT"]
+    ))
+    story.append(Preformatted(
+        "pergunta -> embed -> retrieve (top-k chunks)\n"
+        "                          |\n"
+        "                          v\n"
+        "                    AUGMENTATION: monta um prompt injetando\n"
+        "                    os chunks como contexto explicito\n"
+        "                          |\n"
+        "                          v\n"
+        "                    GENERATION: LLM responde usando\n"
+        "                    APENAS esse contexto",
+        CODE_STYLE
+    ))
+
+    story.append(Paragraph("Augmentation", styles["SectionHeading"]))
+    story.append(Paragraph(
+        "É literalmente concatenar os chunks recuperados dentro do prompt que vai pro LLM - "
+        "\"aumentar\" a pergunta do usuário com informação que ele não tinha antes.",
+        styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("Generation com grounding", styles["SectionHeading"]))
+    story.append(Paragraph(
+        "No <b>system prompt</b>, o modelo é instruído a responder <b>só</b> com base no "
+        "contexto fornecido, e a dizer que não sabe se a resposta não estiver lá. Sem essa "
+        "instrução, o LLM pode completar a resposta com conhecimento geral dele - que pode "
+        "estar certo por acaso, mas quebra a garantia de que a resposta vem dos dados reais "
+        "do pedido, não da memória do modelo. Essa técnica se chama <b>grounding</b>.",
+        styles["BodyPT"]
+    ))
+    story.append(Preformatted(
+        "def generate_answer(pergunta, chunks_recuperados):\n"
+        "    contexto = \"\\n\".join(f\"- {texto}\" for _, texto in chunks_recuperados)\n\n"
+        "    system = (\n"
+        "        \"Voce responde perguntas sobre pedidos do DistributedOrderSystem \"\n"
+        "        \"usando APENAS o contexto fornecido. Se a resposta nao estiver \"\n"
+        "        \"no contexto, diga que nao ha informacao suficiente.\"\n"
+        "    )\n\n"
+        "    response = anthropic_client.messages.create(\n"
+        "        model=\"claude-sonnet-4-6\", max_tokens=300, system=system,\n"
+        "        messages=[{\"role\": \"user\", \"content\": f\"Contexto:\\n{contexto}\\n\\n"
+        "Pergunta: {pergunta}\"}],\n"
+        "    )\n"
+        "    return response.content[0].text",
+        CODE_STYLE
+    ))
+    story.append(Paragraph("Código - week3/rag_generation.py (trecho)", styles["CodeCaption"]))
+
+    story.append(Paragraph("Resultado real - pipeline ponta a ponta", styles["SectionHeading"]))
+    story.append(Preformatted(
+        "Pergunta: \"o cliente pediu reembolso\"\n\n"
+        "Chunks recuperados (contexto que vai para o LLM):\n"
+        "  [0.5819] 'o: item chegou danificado. Cliente pediu dinheiro de volta v'\n"
+        "  [0.4726] 'eiro de volta via PIX. Reembolso processado em 3 dias uteis.'\n\n"
+        "Resposta gerada pelo LLM:\n"
+        "  Com base no contexto fornecido, sim - o cliente relatou que o item chegou\n"
+        "  danificado e solicitou reembolso via PIX. O reembolso foi processado com\n"
+        "  prazo de 3 dias uteis.",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "Resposta corretamente <b>grounded</b>: só usa o que estava nos 2 chunks "
+        "recuperados, nada inventado. Detalhe fino: os scores de cosseno ficaram levemente "
+        "diferentes do Capítulo 07 (<i>0.5493 &rarr; 0.5819</i>, <i>0.4521 &rarr; 0.4726</i>) "
+        "porque a pergunta desta vez não tinha \"?\" no final - o embedding representa o "
+        "texto exato enviado, pontuação inclusa. A ordem do ranking não mudou, só o valor "
+        "do score - lembrete de que \"similaridade semântica\" ainda é sensível a variações "
+        "superficiais do input.", styles["BodyPT"]
+    ))
+    story.append(PageBreak())
+
+    # ===================== CAP 09 =====================
+    story.append(Paragraph("CAPÍTULO 09", styles["ChapterKicker"]))
+    story.append(Paragraph("Conteúdo Programático", styles["ChapterTitle"]))
+    story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
+
+    story.append(Paragraph(
+        "As 26 semanas do curso, semana a semana, com o status de cada item no momento "
+        "desta geração do ebook.", styles["BodyPT"]
+    ))
+    story.append(Spacer(1, 6))
+
+    def status_cell(status):
+        cor_fundo = {"Concluída": GREEN_BG, "Em andamento": ORANGE_BG, "Pendente": GRAY_BG}[status]
+        cor_texto = {"Concluída": GREEN, "Em andamento": ORANGE, "Pendente": GRAY}[status]
+        return Paragraph(
+            f'<font color="{cor_texto.hexval()}"><b>{status}</b></font>',
+            ParagraphStyle(name=f"Status{status}", parent=styles["CellText"], backColor=cor_fundo)
+        )
+
+    programa_rows = [
+        ["Fase", "Semana", "Item", "Status"],
+        ["1 - Fundamentos", "Sem 1", "Python profissional, API Anthropic", "Concluída"],
+        ["1 - Fundamentos", "Sem 2", "Embeddings e similaridade semântica (Voyage AI)", "Concluída"],
+        ["1 - Fundamentos", "Sem 3-4", "RAG do zero: chunking, retrieval, augmentation e generation ponta a ponta", "Concluída"],
+        ["2 - Agentes e MCP", "Sem 5", "Ollama local + docker-compose", "Pendente"],
+        ["2 - Agentes e MCP", "Sem 6-7", "Tool use, loop ReAct, primeiro MCP server", "Pendente"],
+        ["2 - Agentes e MCP", "Sem 8", "Intent classification (few-shot + Pydantic/Instructor)", "Pendente"],
+        ["2 - Agentes e MCP", "Sem 9", "Semantic Kernel como ponte .NET <-> Python", "Pendente"],
+        ["2 - Agentes e MCP", "Sem 10", "LangGraph básico, multi-agent orchestrator-worker", "Pendente"],
+        ["3 - RAG Avançado", "Sem 11-16", "Hybrid search, reranking, LlamaIndex, RAGAS, DSPy, Qdrant", "Pendente"],
+        ["4 - Fine-tuning", "Sem 17-22", "LoRA/QLoRA (Unsloth), DPO, vLLM, MLOps, ML clássico", "Pendente"],
+        ["5 - Produção + Negócio", "Sem 23-26", "LiteLLM, extração do backbone, instanciação do nicho", "Pendente"],
+    ]
+    programa_data = [
+        [Paragraph(v, styles["CellHeader"]) for v in programa_rows[0][:3]] + [Paragraph("Status", styles["CellHeader"])]
+    ] + [
+        [Paragraph(row[0], styles["CellText"]), Paragraph(row[1], styles["CellText"]),
+         Paragraph(row[2], styles["CellText"]), status_cell(row[3])]
+        for row in programa_rows[1:]
+    ]
+    t4 = Table(programa_data, colWidths=[3.6 * cm, 2.2 * cm, 7.6 * cm, 2.6 * cm])
+    t4.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_BLUE]),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(t4)
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph(
+        "&bull; <font color='#2E8B57'><b>Concluída</b></font> - exercício rodado e "
+        "verificado com o André.  "
+        "&bull; <font color='#E07A2C'><b>Em andamento</b></font> - parte do trabalho da "
+        "semana já entregue.  "
+        "&bull; <font color='#5A5A5A'><b>Pendente</b></font> - ainda não iniciada.",
+        styles["BodyPT"]
+    ))
+    story.append(PageBreak())
+
+    doc.multiBuild(story)
     print(f"PDF gerado em: {OUTPUT_PATH}")
 
 
