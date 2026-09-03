@@ -763,7 +763,7 @@ def build():
         "    return response.content[0].text",
         CODE_STYLE
     ))
-    story.append(Paragraph("Código - week3/rag_generation.py (trecho)", styles["CodeCaption"]))
+    story.append(Paragraph("Código - week4/rag_generation.py (trecho)", styles["CodeCaption"]))
 
     story.append(Paragraph("Resultado real - pipeline ponta a ponta", styles["SectionHeading"]))
     story.append(Preformatted(

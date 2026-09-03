@@ -5,9 +5,15 @@ completa a pipeline iniciado in rag_chunking_retrieval.py
 chuncking -> embedding -> retrieval -> AUGUMENTATION -> GENERATION
 """ 
 
+import sys
+from pathlib import Path
+
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+# rag_chunking_retrieval.py agora mora em ../week3 (movido pra separar
+# Parte 1/Parte 2 em pastas por semana)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "week3"))
 from rag_chunking_retrieval import chunk_text, embed_chunks, retrieve
 
 load_dotenv()

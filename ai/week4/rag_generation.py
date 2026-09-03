@@ -1,14 +1,20 @@
 """
 rag_generation.py
-Settimana 3-4 — RAG da zero: Parte 2 — augmentation + generation ponta a ponta
+Settimana 4 — RAG da zero: Parte 2 — augmentation + generation ponta a ponta
 
-Completa il pipeline iniziato in rag_chunking_retrieval.py:
+Completa il pipeline iniziato in ../week3/rag_chunking_retrieval.py (Parte 1):
 chunking -> embedding -> retrieval -> AUGMENTATION -> GENERATION
 """
+
+import sys
+from pathlib import Path
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+# rag_chunking_retrieval.py mora em ../week3 — Parte 1 e Parte 2 são semanas
+# separadas no roadmap, mas a Parte 2 depende das funções da Parte 1.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "week3"))
 from rag_chunking_retrieval import chunk_text, embed_chunks, retrieve
 
 load_dotenv()

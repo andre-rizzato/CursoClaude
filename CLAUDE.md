@@ -407,9 +407,11 @@ Próximo passo: Semana 5 (Fase 2 — Ollama local + docker-compose).
 - ✅ `ai/week3/rag_chunking_retrieval.py` — Parte 1 (chunking + retrieval),
   rodado e verificado (4 chunks, retrieve correto para "o cliente pediu
   reembolso?", explicado como relevância proposicional vs. tópica)
-- ✅ `ai/week3/rag_generation.py` — Parte 2 (augmentation + generation),
+- ✅ `ai/week4/rag_generation.py` — Parte 2 (augmentation + generation),
   rodado e verificado ponta a ponta (grounding no system prompt, resposta
-  do LLM só com base no contexto recuperado)
+  do LLM só com base no contexto recuperado). Movido de `week3/` pra
+  `week4/` em 04/09/2026 pra separar por semana — importa
+  `rag_chunking_retrieval` de `../week3` via `sys.path.insert`.
 - ⚠️ **"Projeto integrado" NÃO é da Semana 3-4** — essa expressão só
   aparece no roadmap na Semana 10 (Fase 2, orchestrator-worker). Confusão
   já esclarecida numa sessão; não reabrir.
@@ -515,10 +517,14 @@ CursoClaude/
 │   ├── week2/
 │   │   ├── embeddings_basico.py
 │   │   └── similaridade_semantica.py   → seção 8 = respostas das 4 perguntas em aberto
-│   └── week3/
-│       ├── rag_chunking_retrieval.py   → Parte 1 (movido de week2/ em 01/09/2026)
-│       ├── rag_generation.py           → Parte 2 (augmentation + generation)
-│       └── rag_generation_mine.py      → cópia adaptada do André, não tocar
+│   ├── week3/
+│   │   └── rag_chunking_retrieval.py   → Parte 1 (movido de week2/ em 01/09/2026)
+│   ├── week4/
+│   │   ├── rag_generation.py           → Parte 2 (movido de week3/ em 04/09/2026)
+│   │   └── rag_generation_mine.py      → cópia adaptada do André, não tocar
+│   └── week5/
+│       ├── docker-compose.yml          → Ollama local
+│       └── ollama_first_call.py        → 1a chamada contra o LLM local
 └── ebook/
     ├── ebook_ai_engineer.py    ← script ReportLab (EbookDocTemplate + multiBuild p/ TOC)
     └── AI_Engineer_Ebook_Semana1.pdf
