@@ -1,11 +1,11 @@
 """
 ollama_first_call.py
-Settimana 5 — Ollama locale via docker-compose
+Semana 5 — Ollama local via docker-compose
 
-Stesso pattern di ai/week1/first_call.py (system + user message), ma
-contro un LLM che gira in un container Docker locale (localhost:11434),
-non nella API cloud della Anthropic. Nessuna API key, nessun custo per
-chiamata, funziona offline.
+Mesmo padrão do ai/week1/first_call.py (system + user message), mas
+contra um LLM rodando num container Docker local (localhost:11434),
+não na API cloud da Anthropic. Sem API key, sem custo por chamada,
+funciona offline.
 """
 
 import requests

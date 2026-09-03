@@ -1,8 +1,8 @@
 """
 rag_generation.py
-Settimana 4 — RAG da zero: Parte 2 — augmentation + generation ponta a ponta
+Semana 4 — RAG do zero: Parte 2 — augmentation + generation ponta a ponta
 
-Completa il pipeline iniziato in ../week3/rag_chunking_retrieval.py (Parte 1):
+Completa o pipeline iniciado em ../week3/rag_chunking_retrieval.py (Parte 1):
 chunking -> embedding -> retrieval -> AUGMENTATION -> GENERATION
 """
 
@@ -28,11 +28,11 @@ anthropic_client = Anthropic()
 
 def generate_answer(pergunta: str, chunks_recuperados: list[tuple]) -> str:
     """
-    Augmentation: monta il prompt finale iniettando i chunk recuperati come
-    contesto esplicito.
+    Augmentation: monta o prompt final injetando os chunks recuperados como
+    contexto explícito.
 
-    Generation: chiama il LLM perché risponda SOLO con base in quel
-    contesto — grounding, per ridurre l'allucinazione.
+    Generation: chama o LLM pra responder SÓ com base nesse
+    contexto — grounding, pra reduzir a alucinação.
     """
     contexto = "\n".join(f"- {texto}" for _, texto in chunks_recuperados)
 

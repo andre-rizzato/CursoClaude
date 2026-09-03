@@ -12,8 +12,11 @@ Engenheiro sênior .NET/C# (~6 anos), com sólida experiência em sistemas
 distribuídos, microsserviços, ASP.NET MVC, SQL Server, Azure (Docker, Azure
 Queues, Azure Functions), RabbitMQ/Kafka, Elasticsearch, Blazor, Angular,
 CI/CD, segurança (JWT/RBAC/GRC). Formado em Análise e Desenvolvimento de
-Sistemas (UNIFAAT). Cidadão brasileiro/italiano — comentários de código em
-italiano são naturais. LinkedIn: linkedin.com/in/dev-andrerizzato. GitHub:
+Sistemas (UNIFAAT). Cidadão brasileiro/italiano. ⚠️ **Comentários de código
+SEMPRE em português** (revogado em 04/09/2026 o registro anterior de que
+italiano seria natural — o André pediu explicitamente pra não misturar
+idiomas; nenhum código novo deve ter italiano, nem no chat, nem nos
+arquivos). LinkedIn: linkedin.com/in/dev-andrerizzato. GitHub:
 github.com/andre-rizzato.
 
 **Objetivo:** transição autodirigida para AI Engineering — agentes,
@@ -400,8 +403,8 @@ repo". Não inventar estado.
 > Escopo: curso e repo. Estado das outras 16 frentes vive em
 > `painel-frentes.md` no Drive — ver seção "Iolau".
 
-**Semana em andamento:** Fase 1, Semanas 3–4 (RAG do zero) — **concluída**.
-Próximo passo: Semana 5 (Fase 2 — Ollama local + docker-compose).
+**Semana em andamento:** Fase 2, Semana 5 (Ollama local) — **concluída**.
+Próximo passo: Semanas 6-7 (Fase 2 — tool use, loop ReAct, primeiro MCP server).
 
 - ✅ Teoria de chunking (fixed-size c/ overlap) e retrieval (cosseno) explicada
 - ✅ `ai/week3/rag_chunking_retrieval.py` — Parte 1 (chunking + retrieval),
@@ -418,6 +421,12 @@ Próximo passo: Semana 5 (Fase 2 — Ollama local + docker-compose).
 - Nota: o André mantém sua própria cópia adaptada dos exercícios
   (`rag_generation_mine.py`) além dos arquivos entregues pelo Claude —
   normal, é o dele para rodar/estudar.
+- ✅ `ai/week5/docker-compose.yml` + `ollama_first_call.py` — Ollama local
+  rodando, `llama3.2` respondendo via API (`/api/chat`, mesmo formato da
+  Anthropic). GPU passthrough (RTX 3060) diagnosticado e corrigido —
+  Docker não repassa GPU por padrão, precisa de
+  `deploy.resources.reservations.devices` no compose. Medido (não
+  estimado): ~13-14 tok/s em CPU → ~95 tok/s em GPU, ~7-8x mais rápido.
 
 ### Perguntas em aberto da Semana 2 — RESPONDIDAS (03/09/2026)
 As 4 perguntas abaixo foram respondidas em chat, no Cap. 06 do ebook
@@ -530,10 +539,11 @@ CursoClaude/
     └── AI_Engineer_Ebook_Semana1.pdf
 ```
 
-**Ebook:** v1.4 real (confirmado no código, não só relatado) — índice
+**Ebook:** v1.5 real (confirmado no código, não só relatado) — índice
 automático via `EbookDocTemplate(SimpleDocTemplate)` + `multiBuild()`,
-Capítulo "Conteúdo Programático" com status colorido por semana
-(verde/laranja/cinza), 16 páginas, Caps 00–09. A v1.3 mencionada em
+Capítulo "Conteúdo Programático" (agora Cap. 10) com status colorido por
+semana (verde/laranja/cinza), 18 páginas, Caps 00–10 (09 = Ollama Local
+e GPU, Semana 5). A v1.3 mencionada em
 versões antigas deste arquivo **nunca existiu no repo** (confirmado via
 `git log` — 0 ocorrências de `EbookDocTemplate`/`multiBuild` em qualquer
 commit) — foi descrita numa conversa do Claude.ai que gerou o PDF mas
@@ -584,3 +594,6 @@ mesmo após conectado — abrir chat novo costuma resolver.
 - Sem repetir de volta o que ele acabou de dizer.
 - Nunca cortar raciocínio técnico quando é o conteúdo pedido — economia de
   tokens não deve virar explicação rasa.
+- Pode ter uma pitada de senso de humor (pedido explícito do André,
+  04/09/2026) — leve, sem virar piada forçada nem atrapalhar a resposta
+  direta.

@@ -24,11 +24,11 @@ anthropic_client = Anthropic()
 def generate_answer(pergunta: str, chunks_recuperados: list[tuple]) -> str:
 
     """
-    Augmentation: monta il prompt finale iniettando i chunk recuperati come
-    contesto esplicito.
+    Augmentation: monta o prompt final injetando os chunks recuperados como
+    contexto explícito.
 
-    Generation: chiama il LLM perché risponda SOLO con base in quel
-    contesto — grounding, per ridurre l'allucinazione.  
+    Generation: chama o LLM pra responder SÓ com base nesse
+    contexto — grounding, pra reduzir a alucinação.
     """
 
     contexto = "\n".join(f"- {texto}" for _, texto in chunks_recuperados)

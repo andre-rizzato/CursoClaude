@@ -1,7 +1,7 @@
-# Settimana 5 — Ollama locale via docker-compose
+# Semana 5 — Ollama local via docker-compose
 #
-# Non tocca DistributedOrderSystem (repo separato) — questo e' solo il
-# runtime del LLM locale, usato dalla camada di IA (Python) in ai/.
+# Não toca no DistributedOrderSystem (repo separado) — isso é só o
+# runtime do LLM local, usado pela camada de IA (Python) em ai/.
 
 services:
   ollama:
@@ -12,6 +12,15 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
+    # Docker não repassa GPU pra nenhum container por padrão — sem isso
+    # aqui, o Ollama roda em CPU mesmo com uma GPU disponível no host.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
 volumes:
   ollama_data:

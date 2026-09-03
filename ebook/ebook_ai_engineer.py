@@ -2,7 +2,7 @@
 """
 Ebook: AI Engineer Roadmap - André Rizzato
 Gerado com reportlab. Preserva capítulos anteriores a cada nova geração.
-Versão: v1.4 - Caps 00 a 09 + índice automático (multiBuild)
+Versão: v1.5 - Caps 00 a 10 + índice automático (multiBuild)
 """
 
 from reportlab.lib.pagesizes import A4
@@ -790,6 +790,82 @@ def build():
 
     # ===================== CAP 09 =====================
     story.append(Paragraph("CAPÍTULO 09", styles["ChapterKicker"]))
+    story.append(Paragraph("Ollama Local e GPU", styles["ChapterTitle"]))
+    story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
+
+    story.append(Paragraph(
+        "Fase 2 começa trocando a API cloud por um LLM rodando localmente, via "
+        "<b>Ollama</b> num container Docker - zero custo por chamada, funciona offline, "
+        "argumento de privacidade para clientes PME sensíveis a dado.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("docker-compose.yml", styles["SectionHeading"]))
+    story.append(Preformatted(
+        "services:\n"
+        "  ollama:\n"
+        "    image: ollama/ollama:latest\n"
+        "    ports:\n"
+        "      - \"11434:11434\"\n"
+        "    volumes:\n"
+        "      - ollama_data:/root/.ollama\n"
+        "    deploy:\n"
+        "      resources:\n"
+        "        reservations:\n"
+        "          devices:\n"
+        "            - driver: nvidia\n"
+        "              count: all\n"
+        "              capabilities: [gpu]",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "Docker não repassa GPU pra nenhum container por padrão - é opt-in explícito via "
+        "<b>deploy.resources.reservations.devices</b>, não detecção automática. Sem esse "
+        "bloco, o Ollama roda em CPU mesmo com uma GPU disponível no host.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("CPU vs. GPU - medido, não estimado", styles["SectionHeading"]))
+    story.append(Paragraph(
+        "Mesma pergunta, mesmo modelo (llama3.2), antes e depois de adicionar a reserva de "
+        "GPU no compose:", styles["BodyPT"]
+    ))
+    story.append(Preformatted(
+        "                       CPU (antes)      GPU (depois)\n"
+        "Geracao                ~13-14 tok/s      ~95 tok/s\n"
+        "Tempo total (1a call)  ~44-47s           ~6-7s\n"
+        "Tempo total (call quente) -              ~0.7s",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "~7-8x mais rápido na geração com a GPU. O <b>load_duration</b> (carregar o modelo "
+        "na VRAM) só acontece uma vez por reinício do container - depois disso fica quente "
+        "e cai pra perto de zero, igual acontecia na RAM da CPU.", styles["BodyPT"]
+    ))
+
+    story.append(Paragraph("ollama_first_call.py - mesmo padrão da Semana 1", styles["SectionHeading"]))
+    story.append(Preformatted(
+        "OLLAMA_URL = \"http://localhost:11434/api/chat\"\n\n"
+        "def chat(pergunta, system=\"\"):\n"
+        "    payload = {\n"
+        "        \"model\": \"llama3.2\",\n"
+        "        \"messages\": [\n"
+        "            {\"role\": \"system\", \"content\": system},\n"
+        "            {\"role\": \"user\", \"content\": pergunta},\n"
+        "        ],\n"
+        "        \"stream\": False,\n"
+        "    }\n"
+        "    return requests.post(OLLAMA_URL, json=payload, timeout=120).json()",
+        CODE_STYLE
+    ))
+    story.append(Paragraph(
+        "O endpoint /api/chat do Ollama aceita o mesmo formato messages=[{role, content}] "
+        "da API da Anthropic - dá pra comparar direto com o first_call.py da Semana 1. "
+        "Diferença: Ollama expõe métricas de timing (load_duration, eval_count) que a API "
+        "cloud não expõe.", styles["BodyPT"]
+    ))
+    story.append(PageBreak())
+
+    # ===================== CAP 10 =====================
+    story.append(Paragraph("CAPÍTULO 10", styles["ChapterKicker"]))
     story.append(Paragraph("Conteúdo Programático", styles["ChapterTitle"]))
     story.append(HRFlowable(width="100%", color=BLUE, thickness=1.2, spaceAfter=14))
 
@@ -812,7 +888,7 @@ def build():
         ["1 - Fundamentos", "Sem 1", "Python profissional, API Anthropic", "Concluída"],
         ["1 - Fundamentos", "Sem 2", "Embeddings e similaridade semântica (Voyage AI)", "Concluída"],
         ["1 - Fundamentos", "Sem 3-4", "RAG do zero: chunking, retrieval, augmentation e generation ponta a ponta", "Concluída"],
-        ["2 - Agentes e MCP", "Sem 5", "Ollama local + docker-compose", "Pendente"],
+        ["2 - Agentes e MCP", "Sem 5", "Ollama local + docker-compose + GPU passthrough", "Concluída"],
         ["2 - Agentes e MCP", "Sem 6-7", "Tool use, loop ReAct, primeiro MCP server", "Pendente"],
         ["2 - Agentes e MCP", "Sem 8", "Intent classification (few-shot + Pydantic/Instructor)", "Pendente"],
         ["2 - Agentes e MCP", "Sem 9", "Semantic Kernel como ponte .NET <-> Python", "Pendente"],
